@@ -22,7 +22,7 @@ namespace todotaller1.Functions.Functions{
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             RecordLogin recordLogin = JsonConvert.DeserializeObject<RecordLogin>(requestBody);
 
-            if (recordLogin.IdEmployee == null)
+            if (string.IsNullOrEmpty(recordLogin.IdEmployee.ToString()))
                 return new BadRequestObjectResult(new Response{
                     IsSuccess = false,
                     Message = "The request must have a IdEmployee"
@@ -37,7 +37,6 @@ namespace todotaller1.Functions.Functions{
                 PartitionKey = "recordLogin",
                 RowKey = Guid.NewGuid().ToString(),
             };
-
             TableOperation addOperation = TableOperation.Insert(recordLoginEntity);
             await recordLoginTable.ExecuteAsync(addOperation);
 
@@ -56,7 +55,6 @@ namespace todotaller1.Functions.Functions{
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             RecordLogin recordLogin = JsonConvert.DeserializeObject<RecordLogin>(requestBody);
 
-            //Validate recordLogin id
             TableOperation findOperation = TableOperation.Retrieve<RecordLoginEntity>("recordLogin", id);
             TableResult findResult = await recordLoginTable.ExecuteAsync(findOperation);
             if (findResult.Result == null)
@@ -64,15 +62,12 @@ namespace todotaller1.Functions.Functions{
                     IsSuccess = false,
                     Message = "RecordLogin not found."
                 });
-            
-            //Update recodLogin
             RecordLoginEntity recordLoginEntity = (RecordLoginEntity)findResult.Result;
-            if (recordLogin.IdEmployee != null){
+            if (!string.IsNullOrEmpty(recordLogin.IdEmployee.ToString())){
                 recordLoginEntity.IdEmployee = recordLogin.IdEmployee;
                 recordLoginEntity.LoginExit = recordLogin.LoginExit;
                 recordLoginEntity.Type = recordLogin.Type;
             }
-
             TableOperation addOperation = TableOperation.Replace(recordLoginEntity);
             await recordLoginTable.ExecuteAsync(addOperation);
 
@@ -92,7 +87,7 @@ namespace todotaller1.Functions.Functions{
             TableQuery<RecordLoginEntity> query = new TableQuery<RecordLoginEntity>();
             TableQuerySegment<RecordLoginEntity> allRecordLogin = await recordLoginTable.ExecuteQuerySegmentedAsync(query, null);
 
-            string message = "Retrieved all todos.";
+            string message = "Retrieved all recordLogin.";
             return new OkObjectResult(new Response{
                 IsSuccess = true,
                 Message = message,
@@ -104,7 +99,6 @@ namespace todotaller1.Functions.Functions{
         public static IActionResult GetRecordLoginById(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordLogin/{id}")] HttpRequest req,
             [Table("recordLogin", "recordLogin", "{id}", Connection = "AzureWebJobsStorage")] RecordLoginEntity recordLoginEntity, string id, ILogger log){
-
             if (recordLoginEntity == null)
                 return new BadRequestObjectResult(new Response{
                     IsSuccess = false,
@@ -137,6 +131,26 @@ namespace todotaller1.Functions.Functions{
                 Result = recordLoginEntity
             });
         }
+        [FunctionName(nameof(GetAllByDate))]
+        public static async Task<IActionResult> GetAllByDate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordHour/{DateWorked}")] HttpRequest req,
+            [Table("recordHour", Connection = "AzureWebJobsStorage")] CloudTable recordHourTable, DateTime DateWorked, ILogger log){
+            
+            log.LogInformation($"//////////////////// date {DateWorked} ");
+            log.LogInformation($"//////////////////// date {DateWorked.Day-1} ");
+            log.LogInformation($"//////////////////// date {DateWorked.AddDays(1)} ");
+
+            string filter = TableQuery.GenerateFilterConditionForDate("DateWorked", QueryComparisons.GreaterThanOrEqual, DateWorked);
+            string filter2 = TableQuery.GenerateFilterConditionForDate("DateWorked", QueryComparisons.LessThan, DateWorked.AddDays(1));
+            //filter > filter2 ? 
+            TableQuery<RecordHourEntity> tableQuery = new TableQuery<RecordHourEntity>().Where(filter2).Where(filter);
+            TableQuerySegment<RecordHourEntity> allRecordsHours = await recordHourTable.ExecuteQuerySegmentedAsync(tableQuery, null);
+
+            return new OkObjectResult(new Response{
+                IsSuccess = true,
+                Message = "Retrieved all allRecordsHours.",
+                Result = allRecordsHours
+            });
+        }
     }
-    //log.LogInformation("///////////////"+);
 }

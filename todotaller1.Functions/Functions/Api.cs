@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using todotaller1.Common.Models;
@@ -95,7 +96,7 @@ namespace todotaller1.Functions.Functions{
             });
         }
 
-        [FunctionName(nameof(GetRecordLoginById))]
+        [FunctionName(nameof(GetRecordLoginById))]  
         public static IActionResult GetRecordLoginById(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordLogin/{id}")] HttpRequest req,
             [Table("recordLogin", "recordLogin", "{id}", Connection = "AzureWebJobsStorage")] RecordLoginEntity recordLoginEntity, string id, ILogger log){
@@ -116,14 +117,14 @@ namespace todotaller1.Functions.Functions{
         public static async Task<IActionResult> DeleteRecordLogin(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete-recordLogin/{id}")] HttpRequest req,
             [Table("recordLogin", "recordLogin", "{id}", Connection = "AzureWebJobsStorage")] RecordLoginEntity recordLoginEntity,
-            [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable todoTable, string id, ILogger log){
+            [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable, string id, ILogger log){
 
             if (recordLoginEntity == null)
                 return new BadRequestObjectResult(new Response{
                     IsSuccess = false,
                     Message = "Todo not found."
                 });
-            await todoTable.ExecuteAsync(TableOperation.Delete(recordLoginEntity));
+            await recordLoginTable.ExecuteAsync(TableOperation.Delete(recordLoginEntity));
             string message = $"Todo: {recordLoginEntity.RowKey}, deleted.";
             return new OkObjectResult(new Response{
                 IsSuccess = true,
@@ -136,20 +137,17 @@ namespace todotaller1.Functions.Functions{
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordHour/{DateWorked}")] HttpRequest req,
             [Table("recordHour", Connection = "AzureWebJobsStorage")] CloudTable recordHourTable, DateTime DateWorked, ILogger log){
             
-            log.LogInformation($"//////////////////// date {DateWorked} ");
-            log.LogInformation($"//////////////////// date {DateWorked.Day-1} ");
-            log.LogInformation($"//////////////////// date {DateWorked.AddDays(1)} ");
-
-            string filter = TableQuery.GenerateFilterConditionForDate("DateWorked", QueryComparisons.GreaterThanOrEqual, DateWorked);
-            string filter2 = TableQuery.GenerateFilterConditionForDate("DateWorked", QueryComparisons.LessThan, DateWorked.AddDays(1));
-            //filter > filter2 ? 
-            TableQuery<RecordHourEntity> tableQuery = new TableQuery<RecordHourEntity>().Where(filter2).Where(filter);
+            TableQuery<RecordHourEntity> tableQuery = new TableQuery<RecordHourEntity>();
             TableQuerySegment<RecordHourEntity> allRecordsHours = await recordHourTable.ExecuteQuerySegmentedAsync(tableQuery, null);
+            List<RecordHourEntity> recordsHours = new List<RecordHourEntity>();
 
+            foreach(RecordHourEntity recordHour in allRecordsHours)
+                if (recordHour.DateWorked.Date.Equals(DateWorked.Date))
+                    recordsHours.Add(recordHour);
             return new OkObjectResult(new Response{
                 IsSuccess = true,
                 Message = "Retrieved all allRecordsHours.",
-                Result = allRecordsHours
+                Result = recordsHours
             });
         }
     }

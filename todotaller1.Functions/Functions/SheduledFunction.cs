@@ -4,13 +4,13 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using todotaller1.Functions.Entities;
-
 namespace todotaller1.Functions.Functions{
     public static class SheduledFunction{
         [FunctionName("SheduledFunction")]
         public static async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
             [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable,
             [Table("recordHour", Connection = "AzureWebJobsStorage")] CloudTable recordHourTable, ILogger log){
+            log.LogInformation("Time worked successful");
 
             string filter = TableQuery.GenerateFilterConditionForBool("Consolidated", QueryComparisons.Equal, false);
             TableQuery<RecordLoginEntity> tableQuery = new TableQuery<RecordLoginEntity>().Where(filter);

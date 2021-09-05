@@ -19,6 +19,7 @@ namespace todotaller1.Functions.Functions{
         public static async Task<IActionResult> CreateRecordLogin(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "create-recordLogin")] HttpRequest req,
             [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable, ILogger log){
+            log.LogInformation("Create function");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             RecordLogin recordLogin = JsonConvert.DeserializeObject<RecordLogin>(requestBody);
@@ -48,10 +49,12 @@ namespace todotaller1.Functions.Functions{
                 Result = recordLoginEntity
             });
         }
+       
         [FunctionName(nameof(UpdateRecordLogin))]
         public static async Task<IActionResult> UpdateRecordLogin(
            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "update-recordLogin/{id}")] HttpRequest req,
            [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable, string id, ILogger log){
+            log.LogInformation("Update function");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             RecordLogin recordLogin = JsonConvert.DeserializeObject<RecordLogin>(requestBody);
@@ -84,6 +87,7 @@ namespace todotaller1.Functions.Functions{
         public static async Task<IActionResult> GetAllRecordLogins(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "all-recordLogins")] HttpRequest req,
             [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable, ILogger log){
+            log.LogInformation("Get all function");
 
             TableQuery<RecordLoginEntity> query = new TableQuery<RecordLoginEntity>();
             TableQuerySegment<RecordLoginEntity> allRecordLogin = await recordLoginTable.ExecuteQuerySegmentedAsync(query, null);
@@ -100,6 +104,8 @@ namespace todotaller1.Functions.Functions{
         public static IActionResult GetRecordLoginById(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordLogin/{id}")] HttpRequest req,
             [Table("recordLogin", "recordLogin", "{id}", Connection = "AzureWebJobsStorage")] RecordLoginEntity recordLoginEntity, string id, ILogger log){
+            log.LogInformation("Get By Id function");
+
             if (recordLoginEntity == null)
                 return new BadRequestObjectResult(new Response{
                     IsSuccess = false,
@@ -118,6 +124,7 @@ namespace todotaller1.Functions.Functions{
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete-recordLogin/{id}")] HttpRequest req,
             [Table("recordLogin", "recordLogin", "{id}", Connection = "AzureWebJobsStorage")] RecordLoginEntity recordLoginEntity,
             [Table("recordLogin", Connection = "AzureWebJobsStorage")] CloudTable recordLoginTable, string id, ILogger log){
+            log.LogInformation("Delete function");
 
             if (recordLoginEntity == null)
                 return new BadRequestObjectResult(new Response{
@@ -132,11 +139,13 @@ namespace todotaller1.Functions.Functions{
                 Result = recordLoginEntity
             });
         }
+        
         [FunctionName(nameof(GetAllByDate))]
         public static async Task<IActionResult> GetAllByDate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-recordHour/{DateWorked}")] HttpRequest req,
             [Table("recordHour", Connection = "AzureWebJobsStorage")] CloudTable recordHourTable, DateTime DateWorked, ILogger log){
-            
+            log.LogInformation("Get all by date function");
+
             TableQuery<RecordHourEntity> tableQuery = new TableQuery<RecordHourEntity>();
             TableQuerySegment<RecordHourEntity> allRecordsHours = await recordHourTable.ExecuteQuerySegmentedAsync(tableQuery, null);
             List<RecordHourEntity> recordsHours = new List<RecordHourEntity>();

@@ -2,6 +2,8 @@
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace todoanderson.Test.Helpers{
@@ -16,6 +18,11 @@ namespace todoanderson.Test.Helpers{
                 HttpStatusCode = 200,
                 Result = TestFactory.MockRecordLoginEntity()
             });
+        }
+        public override async Task<TableQuerySegment<RecordLoginEntity>> ExecuteQuerySegmentedAsync<RecordLoginEntity>(TableQuery<RecordLoginEntity> query, TableContinuationToken token){
+            ConstructorInfo builder = typeof(TableQuerySegment<RecordLoginEntity>).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+                .FirstOrDefault(x => x.GetParameters().Count() == 1);
+            return await Task.FromResult(builder.Invoke(new object[] { TestFactory.MockListRecordsLogins() }) as TableQuerySegment<RecordLoginEntity>);
         }
     }
 }

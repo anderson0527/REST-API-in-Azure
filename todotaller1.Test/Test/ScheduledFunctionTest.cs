@@ -14,7 +14,7 @@ namespace todotaller1.Test.Test{
             SheduledFunction.Run(null, mockRecordLogin, mockRecordHour, logger);
             string message = logger.Logs[0];
 
-            Assert.Contains("Time worked successful", message);
+            Assert.Contains("Time worked function", message);
         }
     }
 }

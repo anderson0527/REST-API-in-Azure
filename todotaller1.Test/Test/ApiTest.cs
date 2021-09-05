@@ -2,16 +2,15 @@
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using todoanderson.Test.Helpers;
 using todotaller1.Common.Models;
 using todotaller1.Functions.Entities;
 using todotaller1.Functions.Functions;
+using todotaller1.Test.Helpers;
 using Xunit;
 
-namespace todotaller1.Test.Test
-{
+namespace todotaller1.Test.Test{
     public class ApiTest{
         private readonly ILogger logger = TestFactory.CreatedLogger();
         [Fact]
@@ -60,7 +59,7 @@ namespace todotaller1.Test.Test
         [Fact]
         public async void GetAllRecordLogins_Should_Return_200(){
             MockCloudTableRecordLogin mockRecordLogin = new MockCloudTableRecordLogin(new Uri("http://127.0.0.1:10002/devstoreaccount1/reports"));
-            HttpRequest request = TestFactory.GetAllHttpRequest();
+            DefaultHttpRequest request = TestFactory.GetAllHttpRequest();
 
             IActionResult response = await Api.GetAllRecordLogins(request, mockRecordLogin, logger);
 
@@ -69,11 +68,10 @@ namespace todotaller1.Test.Test
         }
         [Fact]
         public async void GetAllByDate_Should_Return_200(){
-            MockCloudTableRecordLogin mockRecordHour = new MockCloudTableRecordLogin(new Uri("http://127.0.0.1:10002/devstoreaccount1/reports"));
-            HttpRequest request = TestFactory.GetAllHttpRequest();
-            RecordHourEntity recordHourRequest = TestFactory.MockRecordHourEntity();
+            MockCloudTableRecordHour mockRecordHour = new MockCloudTableRecordHour(new Uri("http://127.0.0.1:10002/devstoreaccount1/reports"));
+            DefaultHttpRequest request = TestFactory.GetAllHttpRequest();
 
-            IActionResult response = await Api.GetAllByDate(request, mockRecordHour, recordHourRequest.DateWorked, logger);
+            IActionResult response = await Api.GetAllByDate(request, mockRecordHour, new DateTime(2021, 08, 29), logger);
 
             OkObjectResult result = (OkObjectResult)response;
             Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
